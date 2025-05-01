@@ -14,10 +14,8 @@ const rutaGoogleDocs = './modules/informacion_empresa-doc.json';
  */
 async function validarClave(texto) {
     if (texto.trim() === CLAVE_CORRECTA) {
-        // Activamos el módulo de la empresa
         activarModulo('informacion_empresa');
         
-        // Verificamos si el enlace ya está guardado
         const enlace = await obtenerEnlaceGuardado();
         if (!enlace) {
             return '❌ No tengo un enlace de Google Docs guardado. Por favor, envíame el enlace del documento para continuar.';
@@ -37,26 +35,43 @@ async function obtenerEnlaceGuardado() {
         const data = JSON.parse(fs.readFileSync(rutaGoogleDocs, 'utf8'));
         return data.enlace;
     }
-    return null; // Si no hay enlace guardado, devolvemos null
+    return null;
 }
 
 /**
- * Guarda el enlace de Google Docs en un archivo para futura referencia
- */
-async function guardarEnlaceGoogleDocs(enlace) {
-    try {
-        fs.writeFileSync(rutaGoogleDocs, JSON.stringify({ enlace }), 'utf8');
-        return '✅ Enlace de Google Docs guardado con éxito. Ahora puedo gestionarlo para mostrar la información de la empresa.';
-    } catch (error) {
-        return '❌ Error al guardar el enlace de Google Docs. Intenta nuevamente.';
-    }
-}
-
-/**
- * Solicitar y guardar el enlace de Google Docs
+ * Solicita el enlace al usuario
  */
 async function solicitarEnlaceGoogleDocs() {
     return '🔗 Por favor, envíame el enlace del documento de Google Docs para continuar.';
+}
+
+/**
+ * Procesa y valida el enlace proporcionado por el usuario.
+ * Si es válido y contiene datos esperados, lo guarda.
+ */
+async function procesarEnlaceGoogleDocs(enlace) {
+    try {
+        const { data } = await axios.get(enlace);
+
+        if (!Array.isArray(data) || data.length === 0 || !data[0].titulo || !data[0].descripcion) {
+            return {
+                exito: false,
+                mensaje: '⚠️ El documento no tiene el formato esperado. Debe ser un JSON con "titulo" y "descripcion".'
+            };
+        }
+
+        fs.writeFileSync(rutaGoogleDocs, JSON.stringify({ enlace }), 'utf8');
+        return {
+            exito: true,
+            mensaje: '✅ Enlace válido y guardado exitosamente. Ahora puedo mostrar la información de la empresa.'
+        };
+
+    } catch (error) {
+        return {
+            exito: false,
+            mensaje: '❌ No se pudo acceder al enlace. Asegúrate de que esté compartido públicamente y que sea un enlace válido.'
+        };
+    }
 }
 
 /**
@@ -74,7 +89,6 @@ async function mostrarInformacionEmpresa() {
             return '🚫 No se pudo obtener la información de la empresa desde el enlace proporcionado.';
         }
 
-        // Muestra los primeros 5 elementos o toda la información
         let mensaje = '📊 *Información de la Empresa:*\n\n';
         data.slice(0, 5).forEach((info, index) => {
             mensaje += `*${index + 1}. ${info.titulo}*\n`;
@@ -104,10 +118,9 @@ async function activarModuloInformacionEmpresa(claveUsuario) {
 }
 
 module.exports = {
-    guardarEnlaceGoogleDocs,
-    mostrarInformacionEmpresa,
     validarClave,
     solicitarEnlaceGoogleDocs,
+    procesarEnlaceGoogleDocs,
+    mostrarInformacionEmpresa,
     activarModuloInformacionEmpresa
 };
-
