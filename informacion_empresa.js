@@ -15,6 +15,13 @@ const rutaGoogleDocs = './modules/informacion_empresa-doc.json';
 async function validarClave(texto) {
     if (texto.trim() === CLAVE_CORRECTA) {
         activarModulo('informacion_empresa');
+        
+        // Verificar si el enlace ya está guardado
+        const enlace = await obtenerEnlaceGuardado();
+        if (!enlace) {
+            return '🔗 No tengo un enlace de Google Docs guardado. Por favor, envíame el enlace del documento para continuar.';
+        }
+        
         return '✅ Clave correcta. Ahora puedo mostrar la información de la empresa.';
     } else {
         return '❌ Clave incorrecta. Por favor, intenta nuevamente.';
@@ -42,6 +49,13 @@ async function guardarEnlaceGoogleDocs(enlace) {
     } catch (error) {
         return '❌ Error al guardar el enlace de Google Docs. Intenta nuevamente.';
     }
+}
+
+/**
+ * Solicitar y guardar el enlace de Google Docs
+ */
+async function solicitarEnlaceGoogleDocs() {
+    return '🔗 Por favor, envíame el enlace del documento de Google Docs para continuar.';
 }
 
 /**
@@ -75,5 +89,6 @@ async function mostrarInformacionEmpresa() {
 module.exports = {
     guardarEnlaceGoogleDocs,
     mostrarInformacionEmpresa,
-    validarClave
+    validarClave,
+    solicitarEnlaceGoogleDocs
 };
