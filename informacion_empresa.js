@@ -10,16 +10,17 @@ const rutaGoogleDocs = './modules/informacion_empresa-doc.json';
 
 /**
  * Valida la clave ingresada por el usuario
- * Si es correcta, activa el módulo
+ * Si es correcta, activa el módulo y solicita la URL del Google Docs si no está guardada.
  */
 async function validarClave(texto) {
     if (texto.trim() === CLAVE_CORRECTA) {
+        // Activamos el módulo de la empresa
         activarModulo('informacion_empresa');
         
-        // Verificar si el enlace ya está guardado
+        // Verificamos si el enlace ya está guardado
         const enlace = await obtenerEnlaceGuardado();
         if (!enlace) {
-            return '🔗 No tengo un enlace de Google Docs guardado. Por favor, envíame el enlace del documento para continuar.';
+            return '❌ No tengo un enlace de Google Docs guardado. Por favor, envíame el enlace del documento para continuar.';
         }
         
         return '✅ Clave correcta. Ahora puedo mostrar la información de la empresa.';
@@ -36,7 +37,7 @@ async function obtenerEnlaceGuardado() {
         const data = JSON.parse(fs.readFileSync(rutaGoogleDocs, 'utf8'));
         return data.enlace;
     }
-    return null;
+    return null; // Si no hay enlace guardado, devolvemos null
 }
 
 /**
@@ -86,9 +87,27 @@ async function mostrarInformacionEmpresa() {
     }
 }
 
+/**
+ * Función para activar el módulo de información de la empresa.
+ */
+async function activarModuloInformacionEmpresa(claveUsuario) {
+    if (claveUsuario.trim() !== CLAVE_CORRECTA) {
+        return '❌ Clave incorrecta. El módulo no se puede activar.';
+    }
+
+    const enlace = await obtenerEnlaceGuardado();
+    if (!enlace) {
+        return '❌ No se ha configurado un enlace de Google Docs. No puedo activar el módulo sin él. Por favor, proporciona el enlace primero.';
+    }
+
+    return '✅ El módulo de información de la empresa está activado y funcionando correctamente.';
+}
+
 module.exports = {
     guardarEnlaceGoogleDocs,
     mostrarInformacionEmpresa,
     validarClave,
-    solicitarEnlaceGoogleDocs
+    solicitarEnlaceGoogleDocs,
+    activarModuloInformacionEmpresa
 };
+
